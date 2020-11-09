@@ -2,24 +2,17 @@
 
 namespace Tarre\Swish\Client\Responses;
 
-use Illuminate\Contracts\Support\Arrayable;
+use Tarre\Swish\Client\Helpers\ResourceBase;
 
-class PaymentResponse implements Arrayable
+/**
+ * @property string location
+ * @property string|null paymentRequestToken
+ * @property string id
+ */
+class PaymentResponse extends ResourceBase
 {
-    public $location;
-    public $paymentRequestToken;
+    public $id; // an ID for retrieveing the status of the payment request
+    public $location; // An URL for retrieving the status of the payment request
+    public $paymentRequestToken; // Returned when creating an m-commerce payment request. The token to use when opening the Swish app
 
-    public function __construct($location, $paymentRequestToken)
-    {
-        $this->location = $location;
-        $this->paymentRequestToken = $paymentRequestToken;
-    }
-
-    public function toArray()
-    {
-        return [
-            'location' => $this->location,
-            'paymentRequestToken' => $this->paymentRequestToken
-        ];
-    }
 }
