@@ -23,11 +23,11 @@ class PaymentRequestTest extends TestCase
 
         $paymentResponse = $client->paymentRequest([
             'currency' => 'SEK',
-            'amount' => 1
+            'amount' => 1,
         ]);
 
-
-        dd($paymentResponse->toArray());
+        $this->assertNotNull($paymentResponse->paymentRequestToken);
+        $this->assertNotNull($paymentResponse->location);
 
     }
 }
