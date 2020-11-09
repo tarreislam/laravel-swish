@@ -2,24 +2,41 @@
 
 namespace Tests;
 
-use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Foundation\Application;
+
+use Tarre\Swish\Providers\SwishServiceProvider;
 
 trait CreatesApplication
 {
     /**
      * Creates the application.
      *
-     * @return Application
+     * @return \Illuminate\Foundation\Application
      */
     public function createApplication()
     {
-        $app = new Application(
+        $app = new \Illuminate\Foundation\Application(
             $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
         );
+/*
+        $app->singleton(
+            \Illuminate\Contracts\Http\Kernel::class,
+            \App\Http\Kernel::class
+        );
 
+        $app->singleton(
+            \Illuminate\Contracts\Console\Kernel::class,
+            \App\Console\Kernel::class
+        );
 
-        $app->make(Kernel::class)->bootstrap();
+        $app->singleton(
+            \Illuminate\Contracts\Debug\ExceptionHandler::class,
+            \App\Exceptions\Handler::class
+        );
+
+*/
+
+        $app->register(SwishServiceProvider::class);
+       //  $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
         return $app;
     }

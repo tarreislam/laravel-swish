@@ -22,7 +22,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Tarre\\Laravel46Elks\\ServiceProvider"
+                "Tarre\\Swish\\Providers\\SwishServiceProvider"
             ]
         }
     },

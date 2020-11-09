@@ -1,4 +1,6 @@
 .idea/
 vendor/
 laradock-laravel-swish/
+storage/
 .phpunit.result.cache
+.gitmodules

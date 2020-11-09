@@ -1,10 +1,10 @@
 <?php
 
-namespace Tarre\Swish;
+namespace Tarre\Swish\Providers;
 
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
-class ServiceProvider extends BaseServiceProvider
+class SwishServiceProvider extends BaseServiceProvider
 {
 
     public function register()
