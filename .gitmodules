@@ -1,0 +1,3 @@
+[submodule "laradock-laravel-swish"]
+	path = laradock-laravel-swish
+	url = https://github.com/Laradock/laradock.git

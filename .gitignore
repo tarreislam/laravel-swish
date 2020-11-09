@@ -1,0 +1,4 @@
+.idea/
+vendor/
+laradock-laravel-swish/
+.phpunit.result.cache
