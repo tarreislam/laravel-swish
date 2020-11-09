@@ -6,7 +6,7 @@ use Tarre\Swish\Client\Swish;
 use Tarre\Swish\Exceptions\InvalidConfigurationOptionException;
 use Tests\TestCase;
 
-class SwishTest extends TestCase
+class ConfigTest extends TestCase
 {
 
     public function testLoadConfigWithInvalidOptions()
@@ -35,9 +35,10 @@ class SwishTest extends TestCase
         $client = new Swish;
 
         $this->assertSame($client->merchant_number, '123456789');
-        $this->assertSame($client->base_uri, 'https://cpc.getswish.net/swish-cpcapi/api/v1');
-        $this->assertSame($client->ca, env('SWISH_CA', storage_path('swish' . DIRECTORY_SEPARATOR . 'ca.pem')));
-        $this->assertSame($client->key, env('SWISH_CA', storage_path('swish' . DIRECTORY_SEPARATOR . 'key.pem')));
+        $this->assertSame($client->base_uri, 'https://cpc.getswish.net/swish-cpcapi/api/v1/');
+        $this->assertSame($client->cert, storage_path('swish' . DIRECTORY_SEPARATOR . 'cert.pem'));
+        $this->assertSame($client->key,  storage_path('swish' . DIRECTORY_SEPARATOR . 'key.pem'));
 
     }
+
 }
