@@ -54,6 +54,8 @@ class Swish
     }
 
     /**
+     * Creates a V2 payment request
+     *
      * @param array|PaymentRequest $requestData
      * @return PaymentResponse
      * @throws GuzzleException
@@ -63,6 +65,7 @@ class Swish
         if (!$requestData instanceof PaymentRequest) {
 
             $mergedOptions = array_merge([
+                'id' => null,
                 'callbackUrl' => $this->callback_base_url,
                 'payeeAlias' => $this->merchant_number,
                 'currency' => $this->currency
@@ -81,6 +84,8 @@ class Swish
     }
 
     /**
+     * Creates a V2 refund request
+     *
      * @param array|RefundRequest $requestData
      * @return RefundResponse
      * @throws GuzzleException
@@ -91,13 +96,14 @@ class Swish
 
             $mergedOptions = array_merge([
                 'callbackUrl' => $this->callback_base_url,
+                'payeeAlias' => $this->merchant_number,
                 'currency' => $this->currency
             ], $requestData);
 
             $requestData = new RefundRequest($mergedOptions);
         }
 
-        $response = $this->makeRequest('POST', 'refunds', $requestData);
+        $response = $this->makeRequest('PUT', "v2/refunds/{$requestData->id}", $requestData);
 
         $commonData = $this->extractCommonData($response);
 
@@ -126,6 +132,10 @@ class Swish
 
         if (!is_null($currency)) {
             $request['currency'] = $currency;
+        }
+
+        if (is_null($paymentRef)) {
+            unset($request['payeePaymentReference']);
         }
 
         return $this->paymentRequest($request);

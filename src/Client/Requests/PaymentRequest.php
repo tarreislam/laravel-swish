@@ -2,7 +2,7 @@
 
 namespace Tarre\Swish\Client\Requests;
 
-use Illuminate\Support\Str;
+use Tarre\Swish\Client\Helpers\Helper;
 use Tarre\Swish\Client\Helpers\ResourceBase;
 
 class PaymentRequest extends ResourceBase
@@ -18,15 +18,13 @@ class PaymentRequest extends ResourceBase
     public $currency;
     public $message;
 
-    public function __construct(array $options = [])
+    public function transforms(): array
     {
-        /*
-         * Transform
-         */
-        if(!isset($options['id'])){
-            $options['id'] = (string) strtoupper(str_replace('-', '', Str::orderedUuid()));
-        }
-        parent::__construct($options);
+        return [
+            'id' => function ($id) {
+                return !$id ? Helper::SwishOrderedUUID4() : $id;
+            },
+        ];
     }
 
 }

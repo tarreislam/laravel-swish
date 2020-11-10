@@ -6,13 +6,28 @@ namespace Tarre\Swish\Client\Helpers;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 use Stringable;
+use Tarre\Swish\Client\Contracts\Transformable;
 use Tarre\Swish\Exceptions\InvalidRequestParamException;
 
-abstract class ResourceBase implements Arrayable, Jsonable, Stringable
+abstract class ResourceBase implements Arrayable, Jsonable, Stringable, Transformable
 {
     public function __construct(array $options = [])
     {
+        /*
+         * Get all transforms
+         */
+        $transforms = $this->transforms();
+
+
         foreach ($options as $key => $value) {
+
+            /*
+             * Transform values
+             */
+            if (isset($transforms[$key])) {
+                $value = $transforms[$key]($value);
+            }
+
             $this->{$key} = $value;
         }
 
@@ -49,5 +64,10 @@ abstract class ResourceBase implements Arrayable, Jsonable, Stringable
         if (!property_exists($this, $key)) {
             throw new InvalidRequestParamException(sprintf("%s does not have the property %s", get_class($this), $key));
         }
+    }
+
+    public function transforms(): array
+    {
+        return [];
     }
 }
