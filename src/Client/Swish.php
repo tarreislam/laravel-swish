@@ -8,13 +8,15 @@ use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Tarre\Swish\Client\Helpers\ResourceBase;
 use Tarre\Swish\Client\Requests\PaymentRequest;
+use Tarre\Swish\Client\Requests\RefundRequest;
 use Tarre\Swish\Client\Responses\PaymentResponse;
 use Tarre\Swish\Client\Responses\PaymentStatusResponse;
+use Tarre\Swish\Client\Responses\RefundResponse;
 use Tarre\Swish\Exceptions\InvalidConfigurationOptionException;
 
 class Swish
 {
-    public $base_uri = 'https://cpc.getswish.net/swish-cpcapi/api/v1/';
+    public $base_uri = 'https://cpc.getswish.net/swish-cpcapi/api/';
     public $cert;
     public $key;
     public $currency;
@@ -69,18 +71,38 @@ class Swish
             $requestData = new PaymentRequest($mergedOptions);
         }
 
-        $response = $this->makeRequest('POST', 'paymentrequests', $requestData);
+        $response = $this->makeRequest('PUT', "v2/paymentrequests/{$requestData->id}", $requestData);
 
-        $location = $response->getHeader('Location')[0];
-        $paymentRequestToken = data_get($response->getHeader('PaymentRequestToken'), 0);
-        $id = preg_replace('/.*\/(.*)/', '$1', $location);
+        $commonData = $this->extractCommonData($response);
 
         return new PaymentResponse(
-            [
-                'id' => $id,
-                'location' => $location,
-                'paymentRequestToken' => $paymentRequestToken
-            ]
+            $commonData
+        );
+    }
+
+    /**
+     * @param array|RefundRequest $requestData
+     * @return RefundResponse
+     * @throws GuzzleException
+     */
+    public function refundRequest($requestData): RefundResponse
+    {
+        if (!$requestData instanceof RefundRequest) {
+
+            $mergedOptions = array_merge([
+                'callbackUrl' => $this->callback_base_url,
+                'currency' => $this->currency
+            ], $requestData);
+
+            $requestData = new RefundRequest($mergedOptions);
+        }
+
+        $response = $this->makeRequest('POST', 'refunds', $requestData);
+
+        $commonData = $this->extractCommonData($response);
+
+        return new RefundResponse(
+            $commonData
         );
     }
 
@@ -116,7 +138,7 @@ class Swish
      */
     public function paymentStatusRequest(string $paymentRequestToken): PaymentStatusResponse
     {
-        $response = $this->makeRequest('GET', "paymentrequests/$paymentRequestToken");
+        $response = $this->makeRequest('GET', "v1/paymentrequests/$paymentRequestToken");
 
         $json = json_decode($response->getBody()->getContents(), true);
 
@@ -127,18 +149,18 @@ class Swish
      * @param $method
      * @param $uri
      * @param ResourceBase $resourceBase
+     * @param string $contentType
      * @return ResponseInterface
      * @throws GuzzleException
      */
-    protected function makeRequest($method, $uri, $resourceBase = null)
+    protected function makeRequest($method, $uri, $resourceBase = null, $contentType = 'application/json')
     {
-
         $gClient = new Client([
             'base_uri' => $this->base_uri,
             RequestOptions::CERT => $this->cert,
             RequestOptions::SSL_KEY => $this->key,
             RequestOptions::HEADERS => [
-                'Content-Type' => 'application/json'
+                'Content-Type' => $contentType
             ]
         ]);
 
@@ -148,11 +170,32 @@ class Swish
             $requestData = [];
         }
 
-        $response = $gClient->request($method, $uri, [
-            RequestOptions::JSON => $requestData
-        ]);
+        $requestOptions = [];
+
+        if (!is_null($resourceBase)) {
+            $requestOptions[RequestOptions::JSON] = $requestData;
+        }
+
+        $response = $gClient->request($method, $uri, $requestOptions);
 
         return $response;
+    }
+
+    /**
+     * @param ResponseInterface $response
+     * @return array
+     */
+    protected function extractCommonData(ResponseInterface $response)
+    {
+        $location = $response->getHeader('Location')[0];
+        $paymentRequestToken = data_get($response->getHeader('PaymentRequestToken'), 0);
+        $id = preg_replace('/.*\/(.*)/', '$1', $location);
+
+        return [
+            'location' => $location,
+            'id' => $id,
+            'paymentRequestToken' => $paymentRequestToken
+        ];
     }
 
 }

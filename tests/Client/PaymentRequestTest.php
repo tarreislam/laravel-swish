@@ -17,7 +17,7 @@ class PaymentRequestTest extends TestCase
          * Setup client with dev backend and test certs
          */
         return new Swish([
-            'base_uri' => 'https://mss.cpc.getswish.net/swish-cpcapi/api/v1/',
+            'base_uri' => 'https://mss.cpc.getswish.net/swish-cpcapi/api/',
             'cert' => dirname(__DIR__) . DIRECTORY_SEPARATOR . '_data' . DIRECTORY_SEPARATOR . 'Swish_Merchant_TestCertificate_1234679304.pem',
             'key' => [dirname(__DIR__) . DIRECTORY_SEPARATOR . '_data' . DIRECTORY_SEPARATOR . 'Swish_Merchant_TestCertificate_1234679304.key', 'swish'], // 2nd param is password for key
             'merchant_number' => '1234679304'
@@ -31,7 +31,7 @@ class PaymentRequestTest extends TestCase
         try {
             $paymentResponse = $client->paymentRequest([
                 'amount' => 1.0,
-                'payerAlias' => '4671234768'
+                'payerAlias' => $this->fakeNumber()
             ]);
         } catch (GuzzleException $e) {
             $this->assertFalse(true, $e->getMessage());
@@ -41,14 +41,13 @@ class PaymentRequestTest extends TestCase
         $this->assertNotNull($paymentResponse->id);
         $this->assertNull($paymentResponse->paymentRequestToken);
         $this->assertNotNull($paymentResponse->location);
-
     }
 
     public function testSimplePaymentRequest()
     {
         $client = $this->setupClient();
 
-        $paymentResponse = $client->simplePaymentRequest('4671234768', 150.0, 'hello');
+        $paymentResponse = $client->simplePaymentRequest($this->fakeNumber(), 150.0, 'hello');
 
         $this->assertInstanceOf(PaymentResponse::class, $paymentResponse);
         $this->assertNull($paymentResponse->paymentRequestToken); // sinve we provided a number
@@ -69,4 +68,26 @@ class PaymentRequestTest extends TestCase
         $this->assertInstanceOf(Carbon::class, $paymentStatusResponse->dateCreated);
         $this->assertSame('CREATED', $paymentStatusResponse->status);
     }
+
+
+    /*
+    public function testRefundRequest()
+    {
+        // do stuff
+        $this->assertTrue(true);
+        return;
+        $client = $this->setupClient();
+
+        $paymentResponse = $client->paymentRequest([
+            'amount' => 1.0,
+            'payerAlias' => $number = $this->fakeNumber(),
+        ]);
+
+        $paymentStatusResponse = $client->refundRequest([
+            'originalPaymentReference' => $paymentResponse->id,
+            'payerAlias' => $number,
+            'amount' => 1.0
+        ]);
+    }
+*/
 }
