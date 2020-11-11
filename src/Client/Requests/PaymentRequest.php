@@ -18,6 +18,18 @@ class PaymentRequest extends ResourceBase
     public $currency;
     public $message;
 
+    public function requiredFields(): array
+    {
+        return [
+            'id',
+            'callbackUrl',
+            'payeeAlias',
+            'currency',
+            'amount',
+            // 'payerAlias' not actually required
+        ];
+    }
+
     public function transforms(): array
     {
         return [

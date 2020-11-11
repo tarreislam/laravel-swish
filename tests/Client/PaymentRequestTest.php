@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Tarre\Swish\Client\Responses\PaymentResponse;
 use Tarre\Swish\Client\Responses\PaymentStatusResponse;
 use Tarre\Swish\Client\Swish;
+use Tarre\Swish\Exceptions\ValidationFailedException;
 use Tests\TestCase;
 
 class PaymentRequestTest extends TestCase
@@ -24,7 +25,18 @@ class PaymentRequestTest extends TestCase
         ]);
     }
 
-    public function testPaymentRequest()
+    public function testPaymentRequestWithFailure()
+    {
+        $client = $this->setupClient();
+
+        try {
+            $client->paymentRequest([]);
+        } catch (ValidationFailedException $exception) {
+            $this->assertTrue(true);
+        }
+    }
+
+    public function testPaymentRequestWithSuccess()
     {
         $client = $this->setupClient();
 
