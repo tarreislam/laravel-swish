@@ -12,6 +12,7 @@ use Tarre\Swish\Client\Requests\RefundRequest;
 use Tarre\Swish\Client\Responses\PaymentResponse;
 use Tarre\Swish\Client\Responses\PaymentStatusResponse;
 use Tarre\Swish\Client\Responses\RefundResponse;
+use Tarre\Swish\Client\Responses\RefundStatusResponse;
 use Tarre\Swish\Exceptions\InvalidConfigurationOptionException;
 
 class Swish
@@ -178,6 +179,19 @@ class Swish
             'amount' => $amount,
             'message' => $message,
         ]);
+    }
+
+    /**
+     * @param string $id
+     * @return RefundStatusResponse
+     */
+    public function refundStatusRequest(string $id): RefundStatusResponse
+    {
+        $response = $this->makeRequest('GET', "v1/refunds/$id");
+
+        $json = json_decode($response->getBody()->getContents(), true);
+
+        return new RefundStatusResponse($json);
     }
 
     /**

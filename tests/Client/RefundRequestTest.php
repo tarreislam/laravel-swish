@@ -2,6 +2,8 @@
 
 namespace Tests\Client;
 
+use Carbon\Carbon;
+use Tarre\Swish\Client\Responses\PaymentStatusResponse;
 use Tarre\Swish\Client\Swish;
 use Tarre\Swish\Exceptions\ValidationFailedException;
 use Tests\TestCase;
@@ -78,5 +80,30 @@ class RefundRequestTest extends TestCase
 
         $this->assertNotNull($refundResponse->id);
         $this->assertNotNull($refundResponse->location);
+    }
+
+    public function testGetPaymentRequest()
+    {
+        $client = $this->setupClient();
+
+        $paymentResponse = $client->paymentRequest([
+            'amount' => 1.0,
+            'payerAlias' => $number = $this->fakeNumber(),
+        ]);
+
+        // wait for request to get auto paid
+        do {
+            $psr = $client->paymentStatusRequest($paymentResponse->id);
+            sleep(1);
+        } while ($psr->status != 'PAID');
+
+        $refundResponse = $client->simpleRefundRequest($psr->paymentReference, 1.0);
+
+        $refundStatusResponse = $client->refundStatusRequest($refundResponse->id);
+
+        $this->assertInstanceOf(PaymentStatusResponse::class, $refundStatusResponse);
+        $this->assertInstanceOf(Carbon::class, $refundStatusResponse->dateCreated);
+        $this->assertSame('PAID', $refundStatusResponse->status);
+        $this->assertSame('Refund', $refundStatusResponse->message);
     }
 }
