@@ -3,8 +3,11 @@
 namespace Tests\Client;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Event;
 use Tarre\Swish\Client\Responses\RefundStatusResponse;
 use Tarre\Swish\Client\Swish;
+use Tarre\Swish\Events\RefundRequest\Created;
+use Tarre\Swish\Events\RefundRequest\Failed;
 use Tarre\Swish\Exceptions\ValidationFailedException;
 use Tests\TestCase;
 
@@ -27,11 +30,18 @@ class RefundRequestTest extends TestCase
     {
         $client = $this->setupClient();
 
+        Event::fake();
+
+        Event::assertNotDispatched(Created::class);
+        Event::assertNotDispatched(Failed::class);
+
         try {
             $refundResponse = $client->refundRequest([
             ]);
         } catch (ValidationFailedException $exception) {
             $this->assertTrue(true);
+            Event::assertNotDispatched(Created::class);
+            Event::assertDispatched(Failed::class);
         }
 
     }
@@ -39,6 +49,8 @@ class RefundRequestTest extends TestCase
     public function testRefundRequestWithSuccess()
     {
         $client = $this->setupClient();
+
+        Event::fake();
 
         $paymentResponse = $client->paymentRequest([
             'amount' => 1.0,
@@ -51,11 +63,17 @@ class RefundRequestTest extends TestCase
             sleep(1);
         } while ($psr->status != 'PAID');
 
+        Event::assertNotDispatched(Created::class);
+        Event::assertNotDispatched(Failed::class);
+
         $refundResponse = $client->refundRequest([
             'originalPaymentReference' => $psr->paymentReference,
             'amount' => 1.0,
             'message' => 'here you go!',
         ]);
+
+        Event::assertDispatched(Created::class);
+        Event::assertNotDispatched(Failed::class);
 
         $this->assertNotNull($refundResponse->id);
         $this->assertNotNull($refundResponse->location);

@@ -4,9 +4,11 @@ namespace Tests;
 
 
 use Illuminate\Broadcasting\BroadcastServiceProvider;
+use Illuminate\Cache\CacheServiceProvider;
 use Illuminate\Config\Repository;
 use Illuminate\Foundation\Application;
 use Illuminate\Queue\QueueServiceProvider;
+use Illuminate\Support\Facades\Event;
 use Tarre\Swish\Providers\SwishServiceProvider;
 
 trait CreatesApplication
@@ -44,8 +46,10 @@ trait CreatesApplication
          */
         $app->register(SwishServiceProvider::class);
         $app->register(BroadcastServiceProvider::class);
+        $app->register(CacheServiceProvider::class);
         $app->register(QueueServiceProvider::class);
         // $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        Event::setFacadeApplication($app);
 
         return $app;
     }

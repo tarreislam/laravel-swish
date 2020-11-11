@@ -4,12 +4,12 @@ namespace Tests\Client;
 
 use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
-use Illuminate\Auth\Events\Failed;
 use Illuminate\Support\Facades\Event;
 use Tarre\Swish\Client\Responses\PaymentResponse;
 use Tarre\Swish\Client\Responses\PaymentStatusResponse;
 use Tarre\Swish\Client\Swish;
 use Tarre\Swish\Events\PaymentRequest\Created;
+use Tarre\Swish\Events\PaymentRequest\Failed;
 use Tarre\Swish\Exceptions\ValidationFailedException;
 use Tests\TestCase;
 
@@ -50,6 +50,12 @@ class PaymentRequestTest extends TestCase
     {
         $client = $this->setupClient();
 
+        Event::fake();
+
+        Event::assertNotDispatched(Failed::class);
+        Event::assertNotDispatched(Created::class);
+
+
         try {
             $paymentResponse = $client->paymentRequest([
                 'amount' => 1.0,
@@ -57,6 +63,8 @@ class PaymentRequestTest extends TestCase
             ]);
         } catch (GuzzleException $e) {
             $this->assertFalse(true, $e->getMessage());
+            Event::assertDispatched(Created::class);
+            Event::assertNotDispatched(Failed::class);
         }
 
         $this->assertInstanceOf(PaymentResponse::class, $paymentResponse);

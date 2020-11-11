@@ -14,8 +14,10 @@ use Tarre\Swish\Client\Responses\PaymentResponse;
 use Tarre\Swish\Client\Responses\PaymentStatusResponse;
 use Tarre\Swish\Client\Responses\RefundResponse;
 use Tarre\Swish\Client\Responses\RefundStatusResponse;
-use Tarre\Swish\Events\PaymentRequest\Created;
-use Tarre\Swish\Events\PaymentRequest\Failed;
+use Tarre\Swish\Events\PaymentRequest\Created as CreatedPaymentEvent;
+use Tarre\Swish\Events\PaymentRequest\Failed as FailedPaymentEvent;
+use Tarre\Swish\Events\RefundRequest\Created as CreatedRefundEvent;
+use Tarre\Swish\Events\RefundRequest\Failed as FailedRefundEvent;
 use Tarre\Swish\Exceptions\InvalidConfigurationOptionException;
 use Tarre\Swish\Exceptions\ValidationFailedException;
 
@@ -84,14 +86,14 @@ class Swish
         try {
             $requestData->validate();
         } catch (ValidationFailedException $exception) {
-            event(new Failed($requestData, $exception));
+            event(new FailedPaymentEvent($requestData, $exception));
             throw $exception;
         }
 
         try {
             $response = $this->makeRequest('PUT', "v2/paymentrequests/{$requestData->id}", $requestData);
         } catch (RequestException $exception) {
-            event(new Failed($requestData, $exception->getResponse()));
+            event(new FailedPaymentEvent($requestData, $exception->getResponse()));
             throw $exception;
         }
 
@@ -101,7 +103,7 @@ class Swish
             $commonData
         );
 
-        event(new Created($requestData, $paymentResponse));
+        event(new CreatedPaymentEvent($requestData, $paymentResponse));
 
         return $paymentResponse;
     }
@@ -171,17 +173,31 @@ class Swish
             $requestData = new RefundRequest($mergedOptions);
         }
 
-        $requestData->validate();
+        try {
+            $requestData->validate();
+        } catch (ValidationFailedException $exception) {
+            event(new FailedRefundEvent($requestData, $exception));
+            throw $exception;
+        }
 
-        $response = $this->makeRequest('PUT', "v2/refunds/{$requestData->id}", $requestData);
+        try {
+            $response = $this->makeRequest('PUT', "v2/refunds/{$requestData->id}", $requestData);
+        } catch (RequestException $exception) {
+            event(new FailedRefundEvent($requestData, $exception->getResponse()));
+            throw $exception;
+        }
 
         $commonData = $this->extractCommonData($response);
 
         unset($commonData['paymentRequestToken']);
 
-        return new RefundResponse(
+        $refundResponse = new RefundResponse(
             $commonData
         );
+
+        event(new CreatedRefundEvent($requestData, $refundResponse));
+
+        return $refundResponse;
     }
 
     /**
