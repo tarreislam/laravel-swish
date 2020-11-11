@@ -59,6 +59,7 @@ class Swish
      * @param array|PaymentRequest $requestData
      * @return PaymentResponse
      * @throws GuzzleException
+     * @throws \Tarre\Swish\Exceptions\ValidationFailedException
      */
     public function paymentRequest($requestData): PaymentResponse
     {
@@ -74,40 +75,13 @@ class Swish
             $requestData = new PaymentRequest($mergedOptions);
         }
 
+        $requestData->validate();
+
         $response = $this->makeRequest('PUT', "v2/paymentrequests/{$requestData->id}", $requestData);
 
         $commonData = $this->extractCommonData($response);
 
         return new PaymentResponse(
-            $commonData
-        );
-    }
-
-    /**
-     * Creates a V2 refund request
-     *
-     * @param array|RefundRequest $requestData
-     * @return RefundResponse
-     * @throws GuzzleException
-     */
-    public function refundRequest($requestData): RefundResponse
-    {
-        if (!$requestData instanceof RefundRequest) {
-
-            $mergedOptions = array_merge([
-                'callbackUrl' => $this->callback_base_url,
-                'payeeAlias' => $this->merchant_number,
-                'currency' => $this->currency
-            ], $requestData);
-
-            $requestData = new RefundRequest($mergedOptions);
-        }
-
-        $response = $this->makeRequest('PUT', "v2/refunds/{$requestData->id}", $requestData);
-
-        $commonData = $this->extractCommonData($response);
-
-        return new RefundResponse(
             $commonData
         );
     }
@@ -142,17 +116,68 @@ class Swish
     }
 
     /**
-     * @param string $paymentRequestToken
+     * @param string $id
      * @return PaymentStatusResponse
      * @throws GuzzleException
      */
-    public function paymentStatusRequest(string $paymentRequestToken): PaymentStatusResponse
+    public function paymentStatusRequest(string $id): PaymentStatusResponse
     {
-        $response = $this->makeRequest('GET', "v1/paymentrequests/$paymentRequestToken");
+        $response = $this->makeRequest('GET', "v1/paymentrequests/$id");
 
         $json = json_decode($response->getBody()->getContents(), true);
 
         return new PaymentStatusResponse($json);
+    }
+
+    /**
+     * Creates a V2 refund request
+     *
+     * @param array|RefundRequest $requestData
+     * @return RefundResponse
+     * @throws GuzzleException
+     * @throws \Tarre\Swish\Exceptions\ValidationFailedException
+     */
+    public function refundRequest($requestData): RefundResponse
+    {
+        if (!$requestData instanceof RefundRequest) {
+
+            $mergedOptions = array_merge([
+                'callbackUrl' => $this->callback_base_url,
+                'payerAlias' => $this->merchant_number,
+                'currency' => $this->currency,
+                'id' => null,
+            ], $requestData);
+
+            $requestData = new RefundRequest($mergedOptions);
+        }
+
+        $requestData->validate();
+
+        $response = $this->makeRequest('PUT', "v2/refunds/{$requestData->id}", $requestData);
+
+        $commonData = $this->extractCommonData($response);
+
+        unset($commonData['paymentRequestToken']);
+
+        return new RefundResponse(
+            $commonData
+        );
+    }
+
+    /**
+     * @param string $originalPaymentReference
+     * @param float $amount
+     * @param string $message
+     * @return RefundResponse
+     * @throws GuzzleException
+     */
+    public function simpleRefundRequest(string $originalPaymentReference, float $amount, string $message = 'Refund'): RefundResponse
+    {
+        return $this->refundRequest([
+            'originalPaymentReference' => $originalPaymentReference,
+            'amount' => $amount,
+            'message' => $message,
+        ]);
     }
 
     /**

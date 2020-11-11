@@ -8,6 +8,7 @@ use Illuminate\Contracts\Support\Jsonable;
 use Stringable;
 use Tarre\Swish\Client\Contracts\Transformable;
 use Tarre\Swish\Exceptions\InvalidRequestParamException;
+use Tarre\Swish\Exceptions\ValidationFailedException;
 
 abstract class ResourceBase implements Arrayable, Jsonable, Stringable, Transformable
 {
@@ -64,6 +65,28 @@ abstract class ResourceBase implements Arrayable, Jsonable, Stringable, Transfor
         if (!property_exists($this, $key)) {
             throw new InvalidRequestParamException(sprintf("%s does not have the property %s", get_class($this), $key));
         }
+    }
+
+    /**
+     * Validate the resource
+     * @throws ValidationFailedException
+     */
+    public function validate()
+    {
+        $requiredFields = $this->requiredFields();
+
+        foreach ($requiredFields as $key) {
+            $value = $this->{$key};
+            if (empty($value)) {
+                throw new ValidationFailedException(sprintf('The key "%s" is required for this resource', $key));
+            }
+
+        }
+    }
+
+    public function requiredFields(): array
+    {
+        return [];
     }
 
     public function transforms(): array

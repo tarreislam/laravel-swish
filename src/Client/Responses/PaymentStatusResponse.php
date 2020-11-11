@@ -38,13 +38,15 @@ class PaymentStatusResponse extends ResourceBase
     public $errorCode;
     public $errorMessage;
 
-    public function __construct(array $options = [])
+    public function transforms(): array
     {
-        /*
-         * transform
-         */
-        $options['dateCreated'] = Carbon::parse($options['dateCreated']);
-        $options['datePaid'] =  isset($options['datePaid']) ? Carbon::parse($options['datePaid']) : null;
-        parent::__construct($options);
+        return [
+            'dateCreated' => function ($dateCreated) {
+                return Carbon::parse($dateCreated);
+            },
+            'datePaid' => function ($datePaid) {
+                return is_null($datePaid) ? null : Carbon::parse($datePaid);
+            }
+        ];
     }
 }

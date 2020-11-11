@@ -11,22 +11,15 @@ use Tests\TestCase;
 
 class PaymentRequestTest extends TestCase
 {
-    protected function setupClient($swapCerts = false): Swish
+    protected function setupClient(): Swish
     {
         /*
          * Setup client with dev backend and test certs
          */
-        if (!$swapCerts) {
-            $cert = 'Swish_Merchant_TestCertificate_1234679304.pem';
-            $key = 'Swish_Merchant_TestCertificate_1234679304.key';
-        } else {
-            $cert = 'Swish_Merchant_TestSigningCertificate_1234679304.pem';
-            $key = 'Swish_Merchant_TestSigningCertificate_1234679304.key';
-        }
         return new Swish([
             'base_uri' => 'https://mss.cpc.getswish.net/swish-cpcapi/api/',
-            'cert' => dirname(__DIR__) . DIRECTORY_SEPARATOR . '_data' . DIRECTORY_SEPARATOR . $cert,
-            'key' => [dirname(__DIR__) . DIRECTORY_SEPARATOR . '_data' . DIRECTORY_SEPARATOR . $key, 'swish'], // 2nd param is password for key
+            'cert' => dirname(__DIR__) . DIRECTORY_SEPARATOR . '_data' . DIRECTORY_SEPARATOR . "Swish_Merchant_TestCertificate_1234679304.pem",
+            'key' => [dirname(__DIR__) . DIRECTORY_SEPARATOR . '_data' . DIRECTORY_SEPARATOR . "Swish_Merchant_TestCertificate_1234679304.key", 'swish'], // 2nd param is password for key
             'merchant_number' => '1234679304'
         ]);
     }
@@ -77,20 +70,4 @@ class PaymentRequestTest extends TestCase
     }
 
 
-    public function testRefundRequest()
-    {
-
-        $client = $this->setupClient(false);
-
-        $paymentResponse = $client->paymentRequest([
-            'amount' => 1.0,
-            'payerAlias' => $number = $this->fakeNumber(),
-        ]);
-
-        $paymentStatusResponse = $client->refundRequest([
-            'originalPaymentReference' => $paymentResponse->id,
-            'payerAlias' => $number,
-            'amount' => 1.0
-        ]);
-    }
 }

@@ -11,11 +11,23 @@ class RefundRequest extends ResourceBase
     public $originalPaymentReference;
     public $callbackUrl;
     public $payerAlias;
-    public $payeeAlias;
     public $amount;
     public $currency;
-    public $messageResponse;
+    public $message;
     public $payerPaymentReference;
+
+    public function requiredFields(): array
+    {
+        return [
+            'originalPaymentReference',
+            'amount',
+            'message',
+            'callbackUrl',
+            'payerAlias',
+            'currency',
+            'id'
+        ];
+    }
 
     public function transforms(): array
     {
