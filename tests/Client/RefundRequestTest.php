@@ -3,7 +3,7 @@
 namespace Tests\Client;
 
 use Carbon\Carbon;
-use Tarre\Swish\Client\Responses\PaymentStatusResponse;
+use Tarre\Swish\Client\Responses\RefundStatusResponse;
 use Tarre\Swish\Client\Swish;
 use Tarre\Swish\Exceptions\ValidationFailedException;
 use Tests\TestCase;
@@ -101,9 +101,9 @@ class RefundRequestTest extends TestCase
 
         $refundStatusResponse = $client->refundStatusRequest($refundResponse->id);
 
-        $this->assertInstanceOf(PaymentStatusResponse::class, $refundStatusResponse);
+        $this->assertInstanceOf(RefundStatusResponse::class, $refundStatusResponse);
         $this->assertInstanceOf(Carbon::class, $refundStatusResponse->dateCreated);
-        $this->assertSame('PAID', $refundStatusResponse->status);
+        $this->assertSame('CREATED', $refundStatusResponse->status);
         $this->assertSame('Refund', $refundStatusResponse->message);
     }
 }

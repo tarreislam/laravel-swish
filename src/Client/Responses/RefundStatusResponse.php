@@ -9,6 +9,7 @@ use Tarre\Swish\Client\Helpers\ResourceBase;
  * @property mixed id
  * @property mixed payeePaymentReference
  * @property mixed originalPaymentReference
+ * @property mixed payerPaymentReference
  * @property mixed paymentReference
  * @property mixed callbackUrl
  * @property mixed payerAlias
@@ -29,6 +30,7 @@ class RefundStatusResponse extends ResourceBase
     public $payeePaymentReference;
     public $originalPaymentReference;
     public $paymentReference;
+    public $payerPaymentReference;
     public $callbackUrl;
     public $payerAlias;
     public $payeeAlias;

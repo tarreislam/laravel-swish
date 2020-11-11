@@ -4,6 +4,7 @@ namespace Tarre\Swish\Client;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use Tarre\Swish\Client\Helpers\ResourceBase;
@@ -13,7 +14,10 @@ use Tarre\Swish\Client\Responses\PaymentResponse;
 use Tarre\Swish\Client\Responses\PaymentStatusResponse;
 use Tarre\Swish\Client\Responses\RefundResponse;
 use Tarre\Swish\Client\Responses\RefundStatusResponse;
+use Tarre\Swish\Events\PaymentRequest\Created;
+use Tarre\Swish\Events\PaymentRequest\Failed;
 use Tarre\Swish\Exceptions\InvalidConfigurationOptionException;
+use Tarre\Swish\Exceptions\ValidationFailedException;
 
 class Swish
 {
@@ -23,6 +27,7 @@ class Swish
     public $currency;
     public $merchant_number;
     public $callback_base_url;
+    public $broadcast_events;
 
     public function __construct(array $config = null)
     {
@@ -76,15 +81,29 @@ class Swish
             $requestData = new PaymentRequest($mergedOptions);
         }
 
-        $requestData->validate();
+        try {
+            $requestData->validate();
+        } catch (ValidationFailedException $exception) {
+            event(new Failed($requestData, $exception));
+            throw $exception;
+        }
 
-        $response = $this->makeRequest('PUT', "v2/paymentrequests/{$requestData->id}", $requestData);
+        try {
+            $response = $this->makeRequest('PUT', "v2/paymentrequests/{$requestData->id}", $requestData);
+        } catch (RequestException $exception) {
+            event(new Failed($requestData, $exception->getResponse()));
+            throw $exception;
+        }
 
         $commonData = $this->extractCommonData($response);
 
-        return new PaymentResponse(
+        $paymentResponse = new PaymentResponse(
             $commonData
         );
+
+        event(new Created($requestData, $paymentResponse));
+
+        return $paymentResponse;
     }
 
     /**

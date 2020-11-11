@@ -3,7 +3,10 @@
 namespace Tests;
 
 
+use Illuminate\Broadcasting\BroadcastServiceProvider;
 use Illuminate\Config\Repository;
+use Illuminate\Foundation\Application;
+use Illuminate\Queue\QueueServiceProvider;
 use Tarre\Swish\Providers\SwishServiceProvider;
 
 trait CreatesApplication
@@ -11,30 +14,13 @@ trait CreatesApplication
     /**
      * Creates the application.
      *
-     * @return \Illuminate\Foundation\Application
+     * @return Application
      */
     public function createApplication()
     {
-        $app = new \Illuminate\Foundation\Application(
+        $app = new Application(
             $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
         );
-        /*
-                $app->singleton(
-                    \Illuminate\Contracts\Http\Kernel::class,
-                    \App\Http\Kernel::class
-                );
-
-                $app->singleton(
-                    \Illuminate\Contracts\Console\Kernel::class,
-                    \App\Console\Kernel::class
-                );
-
-                $app->singleton(
-                    \Illuminate\Contracts\Debug\ExceptionHandler::class,
-                    \App\Exceptions\Handler::class
-                );
-
-        */
         /*
          * Load default config for tests
          */
@@ -54,9 +40,11 @@ trait CreatesApplication
         $app->instance('config', $repository);
 
         /*
-         * Load service provider
+         * Load required service providers
          */
         $app->register(SwishServiceProvider::class);
+        $app->register(BroadcastServiceProvider::class);
+        $app->register(QueueServiceProvider::class);
         // $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
         return $app;
