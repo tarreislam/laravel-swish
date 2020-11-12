@@ -1,7 +1,8 @@
 {
     "name": "tarre/laravel-swish",
-    "description": "Swish wrapper for Laravel",
+    "description": "Laravel wrapper for Swish",
     "type": "library",
+    "minimum-stability": "stable",
     "require": {
         "laravel/laravel": "^5.0|^6.0|^7.0|^8.0",
         "guzzlehttp/guzzle": "^6.3.1|^7.0.1",
